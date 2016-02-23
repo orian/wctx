@@ -2,6 +2,7 @@ package wctx
 
 import (
 	"github.com/julienschmidt/httprouter"
+	paramsHelper "github.com/orian/params"
 	"golang.org/x/net/context"
 
 	"log"
@@ -42,9 +43,9 @@ func (r *Router) wrap(h HandleFunc) httprouter.Handle {
 	})
 }
 
-func FromContext(c context.Context) (params httprouter.Params, ok bool) {
+func FromContext(c context.Context) (paramsHelper.Params, bool) {
 	p, ok := c.Value(&paramsKey).(httprouter.Params)
-	return p, ok
+	return paramsHelper.NewFromHttpRouter(p), ok
 }
 
 func DefaultContextFactory(req *http.Request) context.Context {
