@@ -2,8 +2,10 @@ package wctx
 
 import (
 	"github.com/julienschmidt/httprouter"
+	paramsHelper "github.com/orian/params"
 	"golang.org/x/net/context"
 
+	"log"
 	"net/http"
 )
 
@@ -22,20 +24,28 @@ type ContextProvider func(*http.Request) context.Context
 type Router struct {
 	R              *httprouter.Router
 	ContextFactory ContextProvider
+	m              []Middleware
 }
 
 var paramsKey = "params key"
 
 func (r *Router) wrap(h HandleFunc) httprouter.Handle {
+	// builds wrapper
+	for i := len(r.m) - 1; i >= 0; i-- {
+		h = r.m[i](h)
+	}
 	return httprouter.Handle(func(w http.ResponseWriter, req *http.Request, p httprouter.Params) {
-		ctx := context.WithValue(r.ContextFactory(req), &paramsKey, p)
+		ctx := r.ContextFactory(req)
+		if p != nil {
+			ctx = context.WithValue(ctx, &paramsKey, p)
+		}
 		h(ctx, w, req)
 	})
 }
 
-func FromContext(c context.Context) (params httprouter.Params, ok bool) {
+func FromContext(c context.Context) (paramsHelper.Params, bool) {
 	p, ok := c.Value(&paramsKey).(httprouter.Params)
-	return p, ok
+	return paramsHelper.NewFromHttpRouter(p), ok
 }
 
 func DefaultContextFactory(req *http.Request) context.Context {
@@ -43,7 +53,7 @@ func DefaultContextFactory(req *http.Request) context.Context {
 }
 
 func New() *Router {
-	return &Router{httprouter.New(), DefaultContextFactory}
+	return &Router{httprouter.New(), DefaultContextFactory, nil}
 }
 
 func (r *Router) DELETE(path string, handle HandleFunc) {
@@ -63,10 +73,16 @@ func (r *Router) Handle(method, path string, handle HandleFunc) {
 }
 
 func (r *Router) Handler(method, path string, handler http.Handler) {
+	if len(r.m) > 0 {
+		log.Printf("warning: when registering standard http.Handler the middlewares are skipped")
+	}
 	r.R.Handler(method, path, handler)
 }
 
 func (r *Router) HandlerFunc(method, path string, handler http.HandlerFunc) {
+	if len(r.m) > 0 {
+		log.Printf("warning: when registering standard http.HandleFunc the middlewares are skipped")
+	}
 	r.R.HandlerFunc(method, path, handler)
 }
 
@@ -96,4 +112,14 @@ func (r *Router) ServeFiles(path string, root http.FileSystem) {
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	r.R.ServeHTTP(w, req)
+}
+
+type Middleware func(HandleFunc) HandleFunc
+
+func (r *Router) WithMiddleware(m Middleware) *Router {
+	newR := *r
+	newR.m = make([]Middleware, 0, len(r.m)+1)
+	newR.m = append(newR.m, r.m...)
+	newR.m = append(newR.m, m)
+	return &newR
 }

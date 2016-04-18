@@ -20,10 +20,10 @@ func TestGet(t *testing.T) {
 		if !ok {
 			t.Error("cannot get params")
 		}
-		if pid := p.ByName("pageid"); pid != "12" {
+		if pid := p.Get("pageid").StringOr(""); pid != "12" {
 			t.Errorf("wrong pageid, want 12, got %s", pid)
 		}
-		if mod := p.ByName("mod"); mod != "sub" {
+		if mod := p.Get("mod").StringOr(""); mod != "sub" {
 			t.Errorf("wrong mod, want `sub`, got %q", mod)
 		}
 	})
