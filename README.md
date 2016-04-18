@@ -1,4 +1,5 @@
 # With ConTeXt
+[![GoDoc](http://godoc.org/github.com/orian/wctx?status.png)](http://godoc.org/github.com/orian/wctx)
 
 It's a `github.com/julienschmidt/httprouter` drop in replacement. Basically all methods from the original library are wrapped.
 It makes easy to us the `httprouter` on App Engine and outside of App Engine.
@@ -25,4 +26,11 @@ func init() {
 }
 ```
 
-For more details please check: [![GoDoc](http://godoc.org/github.com/julienschmidt/httprouter?status.png)](http://godoc.org/github.com/julienschmidt/httprouter)
+For more details please the doc of the original repo: [![GoDoc](http://godoc.org/github.com/julienschmidt/httprouter?status.png)](http://godoc.org/github.com/julienschmidt/httprouter)
+
+# Other libraries:
+ 
+ - context aware sessions: [github.com/orian/sessions](https://github.com/orian/sessions), based on Gorilla's session library
+ - CSRF protection, [github.com/orian/nosurf](https://github.com/orian/nosurf)
+ - log library, wrapper for both Google App Engine and standard log, [github.com/orian/utils/net/log](https://github.com/orian/utils/net/log)
+ - a User providing library [coming soon]
